@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ 'Edit' if editing else 'Create' }} {{ table_name[:-1] if table_name.endswith('s') else table_name }} entry
+    </title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="container my-4">
+        <h2>{{ 'Edit' if editing else 'Create' }} {{ table_name[:-1] if table_name.endswith('s') else table_name }} entry</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="post">
+            {% for col in columns %}
+            <div class="mb-3">
+                <label for="{{ col }}" class="form-label">{{ col }}</label>
+                {% if editing and col == pk %}
+                <input type="text" class="form-control" id="{{ col }}" name="{{ col }}" value="{{ row[col] }}" readonly>
+                {% else %}
+                    {% set col_type = TABLES[table_name]['types'].get(col) %}
+                    {% if col_type == 'password' %}
+                    <input type="text" class="form-control" id="{{ col }}" name="{{ col }}"
+                        placeholder="{% if editing %}Leave blank to keep current password{% else %}Enter password{% endif %}">
+                    {% elif col_type == 'date' %}
+                    <input type="date" class="form-control" id="{{ col }}" name="{{ col }}"
+                        value="{{ row[col] if row and row[col] else '' }}">
+                    {% elif col_type == 'TEXT' %}
+                    <textarea class="form-control" id="{{ col }}" name="{{ col }}"
+                        rows="4">{{ row[col] if row and row[col] else '' }}</textarea>
+                    {% else %}
+                    <input type="text" class="form-control" id="{{ col }}" name="{{ col }}"
+                        value="{{ row[col] if row else '' }}" {% if not editing and col==pk %}required{% endif %}>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ url_for('table_list', table_name=table_name) }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper (optional, for dismissible alerts) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
